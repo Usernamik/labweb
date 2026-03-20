@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Lab JS 2</title>
+    <style>
+        #elid {
+            width: 80px;
+            height: 80px;
+            background: #4a90e2;
+            border-radius: 8px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            transition: left 0.4s ease;
+        }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+        h2 { margin-top: 40px; }
+        input { padding: 8px; margin-right: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 16px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #357abd; }
+        #result { margin-top: 12px; padding: 10px; background: #f0f0f0; border-radius: 4px; display: none; }
+        .error { color: red; font-size: 14px; margin-top: 6px; display: none; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 4px; font-weight: bold; }
+        .form-group input { width: 100%; box-sizing: border-box; }
+        .form-group input.invalid { border-color: red; }
+    </style>
+</head>
+<h2> Анімація</h2>
+
+<div style="position: relative; height: 120px; background: #f0f0f0; border-radius: 8px; margin-bottom: 16px;">
+    <div id="elid"></div>
+</div>
+
+<button onclick="moveLeft()">← Вліво</button>
+<button onclick="moveRight()">Вправо →</button>
+<body>
+
+<h2>Пошук округу</h2>
+<input type="text" id="countyInput" placeholder="Baldwin County, Alabama" />
+<button onclick="searchCounty()">Знайти код</button>
+<div id="result"></div>
+
+<h2> Форма</h2>
+<form id="myForm">
+    <div class="form-group">
+        <label>Ім'я</label>
+        <input type="text" id="first_name" placeholder="Введіть ім'я" />
+        <div class="error" id="err_first">⚠ Заповніть поле</div>
+    </div>
+    <div class="form-group">
+        <label>Прізвище</label>
+        <input type="text" id="last_name" placeholder="Введіть прізвище" />
+        <div class="error" id="err_last">⚠ Заповніть поле</div>
+    </div>
+    <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="example@mail.com" />
+        <div class="error" id="err_email">⚠ Заповніть поле</div>
+    </div>
+    <button type="submit">Відправити</button>
+</form>
+<script>
+    let countiesData = [];
+
+    async function fetchCounties() {
+        const url = 'https://api.census.gov/data/2020/acs/acs5/profile?get=NAME&for=county:*';
+        const res = await fetch(url);
+        const raw = await res.json();
+
+        countiesData = raw.slice(1).map(row => ({
+            name:   row[0],
+            state:  row[1],
+            county: row[2]
+        }));
+    }
+
+    function getCountyCode(countyName) {
+        const found = countiesData.find(
+            c => c.name.toLowerCase() === countyName.toLowerCase()
+        );
+        return found ? found.state + found.county : null;
+    }
+
+    async function searchCounty() {
+        const input  = document.getElementById('countyInput').value.trim();
+        const result = document.getElementById('result');
+
+        if (!input) {
+            result.style.display = 'block';
+            result.style.color = 'red';
+            result.textContent = 'Введіть назву округу!';
+            return;
+        }
+
+        result.style.display = 'block';
+        result.style.color = '#333';
+        result.textContent = 'Завантаження...';
+
+        if (countiesData.length === 0) {
+            await fetchCounties();
+        }
+
+        const code = getCountyCode(input);
+        console.log(`Код округу "${input}":`, code);
+
+        if (code) {
+            result.style.color = 'green';
+            result.textContent = `Код округу "${input}": ${code}`;
+        } else {
+            result.style.color = 'red';
+            result.textContent = `Округ "${input}" не знайдено. Перевірте назву.`;
+        }
+    }
+
+    document.getElementById('countyInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') searchCounty();
+    });
+
+    document.getElementById('myForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById('first_name').value.trim();
+        const lastName  = document.getElementById('last_name').value.trim();
+        const email     = document.getElementById('email').value.trim();
+
+        ['first_name', 'last_name', 'email'].forEach(id => {
+            document.getElementById(id).classList.remove('invalid');
+        });
+        ['err_first', 'err_last', 'err_email'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+
+        let valid = true;
+
+        if (!firstName) {
+            document.getElementById('first_name').classList.add('invalid');
+            document.getElementById('err_first').style.display = 'block';
+            valid = false;
+        }
+        if (!lastName) {
+            document.getElementById('last_name').classList.add('invalid');
+            document.getElementById('err_last').style.display = 'block';
+            valid = false;
+        }
+        if (!email) {
+            document.getElementById('email').classList.add('invalid');
+            document.getElementById('err_email').style.display = 'block';
+            valid = false;
+        }
+
+        if (!valid) return;
+
+        alert(`Дані користувача:\nІм'я: ${firstName}\nПрізвище: ${lastName}\nEmail: ${email}`);
+    });
+    let position = 20;
+
+    function moveLeft() {
+        position = Math.max(0, position - 100);
+        document.getElementById('elid').style.left = position + 'px';
+    }
+
+    function moveRight() {
+        const stage = document.getElementById('elid').parentElement;
+        const maxPos = stage.clientWidth - 80 - 4;
+        position = Math.min(maxPos, position + 100);
+        document.getElementById('elid').style.left = position + 'px';
+    }
+</script>
+
+</body>
+</html>
