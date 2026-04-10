@@ -129,9 +129,14 @@ const pageNumbers = computed(() => {
         <h1 class="text-2xl font-bold text-gray-800">
           Список продуктів
         </h1>
-        <NuxtLink to="/" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
-          ← Назад до планів
-        </NuxtLink>
+        <div class="flex gap-3">
+          <NuxtLink to="/subscription" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm">
+            Оформити підписку
+          </NuxtLink>
+          <NuxtLink to="/" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm">
+            Назад до планів
+          </NuxtLink>
+        </div>
       </div>
 
       <div>
@@ -158,10 +163,10 @@ const pageNumbers = computed(() => {
                 </button>
                 <div v-if="showDisplayMenu" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-10">
                   <label v-for="column in Object.keys(visibleColumns)" :key="column" class="flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-gray-100">
-                    <input 
-                      type="checkbox" 
-                      :checked="visibleColumns[column]" 
-                      @change="visibleColumns[column] = !visibleColumns[column]"
+                    <input
+                      type="checkbox"
+                      :checked="visibleColumns[column as keyof typeof visibleColumns]"
+                      @change="visibleColumns[column as keyof typeof visibleColumns] = !visibleColumns[column as keyof typeof visibleColumns]"
                       class="w-4 h-4"
                     >
                     <span class="text-sm text-gray-700">{{ column }}</span>
@@ -179,8 +184,8 @@ const pageNumbers = computed(() => {
                   <span class="text-xs">▼</span>
                 </button>
                 <div v-if="showSortMenu" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-2 z-10 min-w-max">
-                  <button 
-                    v-for="column in ['title', 'price', 'rating', 'brand', 'category']" 
+                  <button
+                    v-for="column in ['title', 'price', 'rating', 'brand', 'category']"
                     :key="column"
                     type="button"
                     class="block w-full text-left px-3 py-1 text-sm hover:bg-gray-100 rounded"
